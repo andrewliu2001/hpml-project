@@ -2,61 +2,59 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+import pytorch_lightning as pl
+from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.utilities import rank_zero_only, rank_zero_warn
 
-# Define the training loop
-def train(model, device, train_loader, optimizer, criterion, epoch):
-    model.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = criterion(output, target)
-        loss.backward()
-        optimizer.step()
-        if batch_idx % 100 == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
+from omegaconf import DictConfig, OmegaConf
+from tqdm.auto import tqdm
+import wandb
+from hydra.utils import get_original_cwd
 
-# Define the test loop
-def test(model, device, test_loader, criterion):
-    model.eval()
-    test_loss = 0
-    correct = 0
-    with torch.no_grad():
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            test_loss += criterion(output, target).item()
-            pred = output.argmax(dim=1, keepdim=True)
-            correct += pred.eq(target.view_as(pred)).sum().item()
+from torch.nn.parallel import DataParallel
 
-    test_loss /= len(test_loader.dataset)
-    print('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
+from torch.profiler import profile, record_function, ProfilerActivity
 
-# Set the device to use for training (e.g. 'cuda' or 'cpu')
+from models.SparseAttention import SparseAttentionModel
+
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# Define the hyperparameters
-batch_size = 64
-learning_rate = 0.01
-momentum = 0.5
-epochs = 10
+wandb.init(project='sparse-attention')
 
-# Load the training and test data
-train_loader = DataLoader(...)
-test_loader = DataLoader(...)
+model = SparseAttentionModel().to(device)
+model = DataParallel(model)
 
-# Instantiate the model and move it to the device
-model = Net().to(device)
+checkpoint_dir = './checkpoints'
 
-# Define the optimizer and loss function
-optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
-criterion = nn.CrossEntropyLoss()
+for epoch in range(10):
 
-# Train and test the model
-for epoch in range(1, epochs + 1):
-    train(model, device, train_loader, optimizer, criterion, epoch)
-    test(model, device, test_loader, criterion)
+    running_loss = 0.0
+    for i, data in enumerate(trainloader):
+
+        inputs, labels = data
+        inputs, labels = inputs.to(device), labels.to(device)
+
+        optimizer.zero_grad()
+
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+
+        wandb.log({"epoch": epoch, "loss": loss.item()})
+
+        running_loss += loss.item()
+
+    checkpoint_path = f'{checkpoint_dir}/checkpoint_epoch_{epoch}.pt'
+    torch.save(model.state_dict(), checkpoint_path)
+
+    epoch_loss = running_loss / len(trainloader)
+    print(f"Epoch {epoch+1} loss: {epoch_loss:.3f}")
+
+torch.save(model.state_dict(), './final_model.pt')
+
+wandb.finish()
+
+
+
