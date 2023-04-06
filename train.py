@@ -98,6 +98,7 @@ def main():
     )
 
     print(f'Device: {args.device}')
+    print(f'Config: {config}')
 
 
 if __name__ == "__main__":

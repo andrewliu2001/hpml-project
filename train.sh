@@ -11,6 +11,7 @@
 #SBATCH --mem-per-cpu=10gb # The memory the job will use per cpu core.
 
 #SBATCH --gres=gpu
+#SBATCH --mem=120G
 #SBATCH --constraint=k80
 
 srun --pty -t 0-01:00 --gres=gpu:1 -A edu /bin/bash
@@ -23,7 +24,7 @@ source ~/.bashrc
 
 conda activate myenv
 
-python train.py --config="configs/medium/halfcheetah_medium.yaml" --device="gpu" --seed="42"
+python train.py --config="configs/medium/halfcheetah_medium.yaml" --device="cuda" --seed="42"
 
 
 # End of script
