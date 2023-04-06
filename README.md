@@ -10,3 +10,9 @@ Other ideas:
     a. Review GNN literature and answer the question: Is the gradient signal conserved? How much of a backprop update do the respective time steps get?
 4. Hyperbolic embeddings
 5. Maximum entropy offline RL? Review principle of maximum entropy in variational inference.
+
+
+Acknowledgements:
+1. Structure follows from https://github.com/Howuhh/faster-trajectory-transformer
+2. Hyena from https://github.com/HazyResearch/safari
+3. Sashimi/S4 from https://github.com/HazyResearch/state-spaces
