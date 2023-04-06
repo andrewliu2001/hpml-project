@@ -1,4 +1,4 @@
-#Sparse-attention: Efficient sequence modeling project
+# Sparse-attention: Efficient sequence modeling project
 
 Core implementations:
 1. Hyena architecture + profiling + WANDB tuning + comparison of results on D4RL against Decision/trajectory transformer (GPT-based). --> Finish by April 22.
