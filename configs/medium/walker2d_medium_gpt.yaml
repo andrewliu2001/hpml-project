@@ -1,13 +1,12 @@
 wandb:
-  project: null  # write yours
-  name: "hopper_medium"
+  project: "sparse-attention"  # write yours
+  name: "walker2d_medium_gpt"
   group: "gpt_cache"
   entity: null  # write yours
   mode: "disabled"  # set to online, if needed
 
-
 dataset:
-  env_name: "hopper-medium-v2"
+  env_name: "walker2d-medium-v2"
   seq_len: 10
   cache_path: "data"
   num_bins: ${model.vocab_size}
@@ -17,10 +16,10 @@ dataset:
 
 model:
   vocab_size: 100
-  transition_dim: 16
-  observation_dim: 11
-  action_dim: 3
-  seq_len: 160
+  transition_dim: 25
+  observation_dim: 17
+  action_dim: 6
+  seq_len: 250
   embedding_dim: 128
   num_layers: 4
   num_heads: 4

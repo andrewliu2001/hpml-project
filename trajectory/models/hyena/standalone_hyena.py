@@ -227,7 +227,12 @@ class HyenaOperator(nn.Module):
             **filter_args
         ) 
 
-    def forward(self, u, *args, **kwargs):
+    def forward(self, u, state, attn_pad_mask, *args, **kwargs):
+
+        """
+        Figure out what to do with state, attn_pad_mask
+
+        """
         l = u.size(-2)
         l_filter = min(l, self.l_max)
         u = self.in_proj(u)
@@ -247,22 +252,5 @@ class HyenaOperator(nn.Module):
         y = rearrange(v * x[0], 'b d l -> b l d')
 
         y = self.out_proj(y)
-        return y
-
-    
-    
-if __name__ == "__main__":
-    layer = HyenaOperator(
-        d_model=512, 
-        l_max=1024, 
-        order=2, 
-        filter_order=64
-    )
-    x = torch.randn(1, 1024, 512, requires_grad=True)
-    y = layer(x)
         
-    print(x.shape, y.shape)
-    
-    grad = torch.autograd.grad(y[:, 10, :].sum(), x)[0]
-    print('Causality check: gradients should not flow "from future to past"')
-    print(grad[0, 11, :].sum(), grad[0, 9, :].sum())
+        return y, None

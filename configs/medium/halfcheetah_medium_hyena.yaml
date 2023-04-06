@@ -1,12 +1,12 @@
 wandb:
-  project: null  # write yours
-  name: "walker2d_medium"
-  group: "gpt_cache"
+  project: "sparse-attention"  # write yours
+  name: "halfcheetah_medium_hyena"
+  group: "hyena_cache"
   entity: null  # write yours
   mode: "disabled"  # set to online, if needed
 
 dataset:
-  env_name: "walker2d-medium-v2"
+  env_name: "halfcheetah-medium-v2"
   seq_len: 10
   cache_path: "data"
   num_bins: ${model.vocab_size}
@@ -21,9 +21,8 @@ model:
   action_dim: 6
   seq_len: 250
   embedding_dim: 128
-  num_layers: 4
-  num_heads: 4
-  use_sep_heads: true
+  n_layers: 8
+  d_model: 128 #should match embedding dim
 
 trainer:
   num_epochs_ref: 50
@@ -40,8 +39,8 @@ trainer:
   eval_discount: ${dataset.discount}
   eval_temperature: 1
   eval_plan_every: 1
-  eval_beam_width: 128
-  eval_beam_steps: 15
+  eval_beam_width: 32
+  eval_beam_steps: 5
   eval_beam_context: 5
   eval_sample_expand: 2
   eval_k_obs: 1

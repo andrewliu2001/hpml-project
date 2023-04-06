@@ -8,12 +8,12 @@ from tqdm.auto import tqdm, trange
 from stable_baselines3.common.vec_env import DummyVecEnv
 
 from trajectory.utils.env import vec_rollout, create_env
-from trajectory.models.gpt.ein_linear import EinLinear
+from trajectory.models.ein_linear import EinLinear
 from trajectory.utils.scheduler import GPTScheduler
 from trajectory.utils.common import weight_decay_groups, set_seed
 
 
-class GPTTrainer:
+class Trainer:
     def __init__(
             self,
             final_tokens,
@@ -75,12 +75,17 @@ class GPTTrainer:
         self.device = device
 
     def get_optimizer(self, model):
+        """
+        Edit for non-GPT architectures
+        """
         param_groups = weight_decay_groups(
-            model=model,
-            whitelist_modules=(torch.nn.Linear,  torch.nn.MultiheadAttention, EinLinear),
-            blacklist_modules=(torch.nn.LayerNorm, torch.nn.Embedding),
-            blacklist_named=("pos_emb",)
-        )
+                model=model,
+                whitelist_modules=(torch.nn.Linear,  torch.nn.MultiheadAttention, EinLinear),
+                blacklist_modules=(torch.nn.LayerNorm, torch.nn.Embedding),
+                blacklist_named=("pos_emb",)
+            )
+
+
         optim_groups = [
             {"params": param_groups["decay"], "weight_decay": self.weight_decay},
             {"params": param_groups["nodecay"], "weight_decay": 0.0},
@@ -90,6 +95,9 @@ class GPTTrainer:
         return optimizer
 
     def get_scheduler(self, optimizer):
+        
+        #For now, assume we use the same scheduler for all models
+
         scheduler = GPTScheduler(
             optimizer,
             warmup_tokens=self.warmup_tokens,
@@ -101,6 +109,14 @@ class GPTTrainer:
     def __get_loss(self, model, batch):
         tokens, targets, loss_pad_mask = batch
         logits, state = model(tokens)
+
+        """
+        print(f'Batch dimensions: {len(batch)}, {batch[0].size()}')
+        print(f'Batch dimensions: {len(batch)}, {batch[1].size()}')
+        print(f'Batch dimensions: {len(batch)}, {batch[2].size()}')
+        print(f'Logits dimensions: {logits.size()}')
+        print(f'State dimensions: {len(state)}, {state[0].size()}')
+        """
 
         loss = F.cross_entropy(logits.reshape(-1, logits.size(-1)), targets.reshape(-1), reduction="none")
         if self.action_weight != 1 or self.value_weight != 1 or self.reward_weight != 1:
