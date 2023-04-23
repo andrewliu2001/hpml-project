@@ -72,6 +72,8 @@ def run_experiment():
     seed = args.seed
     device = args.device
 
+    wandb.init(project=config.wandb.name)
+
     config.model.update(wandb.config)
     config.model['d_model'] = wandb.config['embedding_dim']
 
@@ -103,10 +105,6 @@ def run_experiment():
     warmup_tokens = len(dataset) * data_conf.seq_len * config.model.transition_dim
     final_tokens = warmup_tokens * num_epochs
 
-    wandb.init(
-        **config.wandb,
-        config=dict(OmegaConf.to_container(config, resolve=True))
-    )
     trainer = Trainer(
         final_tokens=final_tokens,
         warmup_tokens=warmup_tokens,
