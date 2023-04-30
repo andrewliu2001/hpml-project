@@ -38,11 +38,8 @@ def build_sweep_config():
 
     #parameters for hyperparameter sweep
     parameters_dict = {
-        'embedding_dim': {
-            'values': [16, 32, 64]
-        },
         'num_layers': {
-            'values': [3, 4, 5]
+            'values': [3, 4]
         },
         'embedding_dropout':{
             'distribution': 'uniform',
@@ -53,7 +50,7 @@ def build_sweep_config():
             'distribution': 'uniform',
             'min': 0.0,
             'max': 0.3
-        }
+        },
         'attention_dropout': {
             'distribution': 'uniform',
             'min': 0.0,
@@ -75,7 +72,6 @@ def run_experiment():
     wandb.init(project=config.wandb.name)
 
     config.model.update(wandb.config)
-    config.model['d_model'] = wandb.config['embedding_dim']
 
     config.run_seed = seed
     os.makedirs(config.trainer.checkpoints_path, exist_ok=True)
@@ -99,8 +95,12 @@ def run_experiment():
 
     model = TrajectoryModel(layer_type=model_parse, **config.model)
     model.to(device)
+    num_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print("number of trainable parameters is ", num_trainable_params)
+    wandb.log({'trainable_params': num_trainable_params})
 
     num_epochs = int(1e6 / len(dataset) * trainer_conf.num_epochs_ref)
+    print("number of epochs is ", num_epochs)
 
     warmup_tokens = len(dataset) * data_conf.seq_len * config.model.transition_dim
     final_tokens = warmup_tokens * num_epochs
@@ -147,7 +147,7 @@ if __name__ == "__main__": #run full sweep
         OmegaConf.from_cli(override)
     )
 
-    wandb.login()
+    wandb.login(key='cc06c59ada2006071885fa37d4fd6553aa827f61')
 
     sweep_config = build_sweep_config()
     sweep_id = wandb.sweep(sweep=sweep_config, project=config.wandb.name)

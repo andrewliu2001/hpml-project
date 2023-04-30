@@ -7,24 +7,22 @@
 #SBATCH --account=edu # The account name for the job.
 #SBATCH --job-name=halfcheetah_medium_gpt # The job name.
 #SBATCH -c 10 # The number of cpu cores to use.
-#SBATCH --time=24:00:00 # The time the job will take to run.
+#SBATCH --time=11:59:00 # The time the job will take to run.
 #SBATCH --mem-per-cpu=10gb # The memory the job will use per cpu core.
 
 #SBATCH --gres=gpu
 #SBATCH --mem=120G
 #SBATCH --constraint=k80
 
-srun --pty -t 0-01:00 --gres=gpu:1 -A edu /bin/bash
 
 module load anaconda
-
 conda init bash
 
 source ~/.bashrc
 
 conda activate myenv
 
-python train.py --config="configs/medium/halfcheetah_medium.yaml" --device="cuda" --seed="42"
+python train_sweep.py --config="configs/medium/halfcheetah_medium_hyena.yaml" --device="cuda" --seed="42"
 
 
 # End of script
