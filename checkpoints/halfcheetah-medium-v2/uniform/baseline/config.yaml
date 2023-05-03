@@ -17,16 +17,16 @@ model:
   transition_dim: 25
   observation_dim: 17
   action_dim: 6
-  seq_len: 250
+  seq_len: 1000
   embedding_dim: 128
-  n_layers: 8
+  n_layers: 12
   d_model: 128
-  attention_dropout: 0.2651071435646729
-  embedding_dropout: 0.08544330021964071
-  num_layers: 4
-  residual_dropout: 0.1856452721374802
+  num_layers: 12
+  embedding_dropout: 0.02974
+  attention_dropout: 0.2553
+  residual_dropout: 0.185
 trainer:
-  num_epochs_ref: 5
+  num_epochs_ref: 20
   action_weight: 5
   value_weight: 1
   reward_weight: 1

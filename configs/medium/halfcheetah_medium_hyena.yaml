@@ -19,13 +19,13 @@ model:
   transition_dim: 25
   observation_dim: 17
   action_dim: 6
-  seq_len: 250
+  seq_len: 1000
   embedding_dim: 128
-  n_layers: 8
+  n_layers: 12
   d_model: 128 #should match embedding dim
 
 trainer:
-  num_epochs_ref: 5 #was 50, changed for sweep
+  num_epochs_ref: 20 #was 50 originally
   action_weight: 5
   value_weight: 1
   reward_weight: 1

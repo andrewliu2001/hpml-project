@@ -22,6 +22,10 @@ def create_argparser():
 
 
 def run_experiment(config, seed, device):
+    
+    config.model.update({'num_layers':12, 'embedding_dropout':0.02974, 'attention_dropout':0.2553, 'residual_dropout':0.185}) #best hyperparameters from sweep
+    print(f"config: {config}")
+
     config.run_seed = seed
     os.makedirs(config.trainer.checkpoints_path, exist_ok=True)
     OmegaConf.save(OmegaConf.to_container(config, resolve=True), os.path.join(config.trainer.checkpoints_path, "config.yaml"))
@@ -46,6 +50,7 @@ def run_experiment(config, seed, device):
     model.to(device)
 
     num_epochs = int(1e6 / len(dataset) * trainer_conf.num_epochs_ref)
+    print("number of epochs: ", num_epochs)
 
     warmup_tokens = len(dataset) * data_conf.seq_len * config.model.transition_dim
     final_tokens = warmup_tokens * num_epochs
@@ -101,7 +106,6 @@ def main():
     )
 
     print(f'Device: {args.device}')
-    print(f'Config: {config}')
 
 
 if __name__ == "__main__":
