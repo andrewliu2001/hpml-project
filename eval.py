@@ -8,7 +8,7 @@ from omegaconf import OmegaConf
 
 from stable_baselines3.common.vec_env import DummyVecEnv
 
-from trajectory.models.gpt import GPT
+from trajectory.models.trajectory import TrajectoryModel
 from trajectory.utils.common import set_seed
 from trajectory.utils.env import create_env, rollout, vec_rollout
 
@@ -28,11 +28,15 @@ def run_experiment(config, seed, device):
     run_config = OmegaConf.load(os.path.join(config.checkpoints_path, "config.yaml"))
     discretizer = torch.load(os.path.join(config.checkpoints_path, "discretizer.pt"), map_location=device)
 
-    model = GPT(**run_config.model)
+
+    model_parse='hyena'
+    
+    model = TrajectoryModel(layer_type=model_parse, **run_config.model)
     model.eval()
     model.to(device)
     model.load_state_dict(torch.load(os.path.join(config.checkpoints_path, config.model_name), map_location=device))
 
+    
     if config.vectorized:
         env = DummyVecEnv([lambda: create_env(run_config.dataset.env_name) for _ in range(config.num_episodes)])
 
@@ -83,7 +87,7 @@ def run_experiment(config, seed, device):
     reward_mean, reward_std = np.mean(rewards), np.std(rewards)
     score_mean, score_std = np.mean(scores), np.std(scores)
 
-    print(f"Evalution on {run_config.dataset.env_name}")
+    print(f"Evaluation on {run_config.dataset.env_name}")
     print(f"Mean reward: {reward_mean} ± {reward_std}")
     print(f"Mean score: {score_mean} ± {score_std}")
 
