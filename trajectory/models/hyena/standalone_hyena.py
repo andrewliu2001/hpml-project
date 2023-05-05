@@ -210,6 +210,9 @@ class HyenaOperator(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.in_proj = nn.Linear(d_model, inner_width)
         self.out_proj = nn.Linear(d_model, d_model)
+
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
         
         self.short_filter = nn.Conv1d(
             inner_width, 
@@ -233,6 +236,8 @@ class HyenaOperator(nn.Module):
         Figure out what to do with state, attn_pad_mask
 
         """
+        u = self.norm1(u)
+
         l = u.size(-2)
         l_filter = min(l, self.l_max)
         u = self.in_proj(u)
@@ -251,6 +256,6 @@ class HyenaOperator(nn.Module):
 
         y = rearrange(v * x[0], 'b d l -> b l d')
 
-        y = self.out_proj(y)
+        y = self.out_proj(self.norm2(y))
         
         return y, None

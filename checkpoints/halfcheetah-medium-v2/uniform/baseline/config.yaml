@@ -1,9 +1,9 @@
 wandb:
-  project: null
-  name: halfcheetah_medium
-  group: gpt_cache
-  entity: null
-  mode: disabled
+  project: sparse-attention
+  name: halfcheetah_medium_hyena
+  group: hyena_cache
+  entity: kmsurrao
+  mode: online
 dataset:
   env_name: halfcheetah-medium-v2
   seq_len: 10
@@ -17,13 +17,16 @@ model:
   transition_dim: 25
   observation_dim: 17
   action_dim: 6
-  seq_len: 250
+  seq_len: 1000
   embedding_dim: 128
-  num_layers: 4
-  num_heads: 4
-  use_sep_heads: true
+  n_layers: 12
+  d_model: 128
+  num_layers: 12
+  embedding_dropout: 0.02974
+  attention_dropout: 0.2553
+  residual_dropout: 0.185
 trainer:
-  num_epochs_ref: 50
+  num_epochs_ref: 20
   action_weight: 5
   value_weight: 1
   reward_weight: 1

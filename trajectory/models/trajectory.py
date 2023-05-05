@@ -87,11 +87,11 @@ class TrajectoryModel(nn.Module):
             torch.nn.init.ones_(module.weight)
         # new, from https://github.com/karpathy/minGPT/pull/62
         elif isinstance(module, GPTBlock):
-            torch.nn.init.normal_(module.pos_emb, mean=0.0, std=0.02)
-        """
+            torch.nn.init.normal_(self.pos_emb, mean=0.0, std=0.02)
+        
         elif isinstance(module, HyenaOperator):
-            torch.nn.init.normal_(module.pos_emb, mean=0.0, std=0.02)
-        """
+            torch.nn.init.normal_(self.pos_emb, mean=0.0, std=0.02)
+        
 
     def _offset_tokens(self, tokens, state=None):
         t = tokens.shape[1] if state is None else state[0].shape[1] + 1
@@ -153,7 +153,6 @@ class TrajectoryModel(nn.Module):
         """
         # [batch, seq_len, embedding_dim]
 
-        print(x.size())
         x = self.norm(x)
 
         if self.use_sep_heads:
