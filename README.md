@@ -37,9 +37,12 @@ To save time, each Hyena sweep lasted only 2 epochs. This training duration prov
 Side-by-side comparison of Hyena and GPT-based Trajectory Models:
 
 Profiling Hyena at inference time on CPU:
+Compute-wise, cost is dominated by FFT/IFFT and linear layers, which is expected since Hyena uses linear layers to generate its continuous convolution kernel (which is then computed using FFT). Speeding up linear layers during inference time can be done using static quantization (quantizing both weight and activations post-training as opposed to just weights). Since we are interested in large kernels (of length >=1000), it does not make sense to experiment with other convolution algorithms, so we decided to stick with FFT. 
+
 ![Hyena profile](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/hyena_profile.png)
 
 Quantization:
+
 
 Distributed training:
 
