@@ -146,9 +146,7 @@ if __name__ == "__main__": #run full sweep
         OmegaConf.load(args.config),
         OmegaConf.from_cli(override)
     )
-
-    wandb.login(key='cc06c59ada2006071885fa37d4fd6553aa827f61')
-
+    
     sweep_config = build_sweep_config()
     sweep_id = wandb.sweep(sweep=sweep_config, project=config.wandb.name)
     #sweep_id = 'kmsurrao/halfcheetah_medium_hyena/v51lsrud' #remove and uncomment above
