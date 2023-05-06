@@ -1,4 +1,4 @@
-# HPML COMS6998 Project:
+# HPML COMS6998 Project
 
 Collaborators: Andrew Liu, Kristen Surrao
 
