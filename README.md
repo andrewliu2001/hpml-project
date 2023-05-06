@@ -25,9 +25,13 @@ python profile.py --config="configs/eval_base.yaml" --device="cuda" --seed="42" 
 ```
 
 Results:
+W&B sweep:
 ![Sweep curve](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/sweep.png)
 ![Sweep table](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/sweep_table.png)
 ![Importances](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/importance.png)
+
+Profiling Hyena at inference time on CPU:
+![Hyena profile](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/hyena_profile.png)
 
 Acknowledgements:
 1. Codebase forked from https://github.com/Howuhh/faster-trajectory-transformer
