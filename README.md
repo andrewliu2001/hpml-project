@@ -25,8 +25,9 @@ python profile.py --config="configs/eval_base.yaml" --device="cuda" --seed="42" 
 ```
 
 Results:
-![Screenshot](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/sweep.png)
-
+![Sweep curve](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/sweep.png)
+![Sweep table](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/sweep_table.png)
+![Importances](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/importance.png)
 
 Acknowledgements:
 1. Codebase forked from https://github.com/Howuhh/faster-trajectory-transformer
