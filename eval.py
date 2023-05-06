@@ -29,7 +29,8 @@ def run_experiment(config, seed, device):
     discretizer = torch.load(os.path.join(config.checkpoints_path, "discretizer.pt"), map_location=device)
 
 
-    model_parse='gpt' #gpt or hyena
+
+    model_parse='gpt'
     
     model = TrajectoryModel(layer_type=model_parse, **run_config.model)
     model.eval()

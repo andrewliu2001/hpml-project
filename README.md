@@ -1,31 +1,27 @@
-# Sparse-attention: Efficient sequence modeling project
+# HPML COMS6998 Project:
 
-To run training script:
+Collaborators: Andrew Liu, Kristen Surrao
 
-```python
-python train.py --config="configs/medium/<env>_<difficulty>_<layer_type>.yaml" --device="cuda" --mem=120G
+Description:
+In this class project, we experiment with the novel Hyena continuous convolution kernel as an alternative to transformers for efficiently capturing long-range dependencies in offline reinforcement learning. Specifically, we incorporated the Hyena module into the Trajectory Model, performed hyperparameter sweeps and profiling, and performed optimizations including distributed training and post-training static quantization. For simplicity, we only used
+
+Outline of repo:
+1. train.py calls a trainer object, which is under trajectory/models/general_trainer.py. You can find the boilerplate Pytorch training loop in general_trainer.py. general_trainer then uses a generic TrajectoryModel object (a wrapper around either Hyena layers or GPT layers), which is written in trajectory.py. 
+2. 
+
+Installing dependencies:
+
+Scripts:
+```
+python train.py --config="configs/medium/halfcheetah_medium_hyena.yaml" --device="cuda" --mem=120G
 ```
 
 
-Core implementations:
-1. Hyena architecture + profiling + WANDB tuning + comparison of results on D4RL against trajectory transformer (GPT-based). --> Finish by April 22.
-2. Perform Pykeops optimizations.
+Results:
 
-
-Secondary ideas:
-1. Incorporate FlashAttention and FlashConv and measure performance speedups.
-2. Implement MCTS planning.
-
-Other ideas:
-1. Online PCA vs S4/Sashimi. --> Can we get rid of complicated initialization schemes and view the entire LRD problem as a dimensionality reduction problem in kernel space?
-2. RNN region proposal for transformer processing vs Reformer, Memorizing Transformer, and Block Recurrent Transformer.
-3. Vanishing gradient due to O(N) bottleneck in RNNs:
-    a. Review GNN literature and answer the question: Is the gradient signal conserved? How much of a backprop update do the respective time steps get?
-4. Hyperbolic embeddings
-5. Maximum entropy offline RL? Review principle of maximum entropy in variational inference.
 
 
 Acknowledgements:
-1. Structure follows from https://github.com/Howuhh/faster-trajectory-transformer
-2. Hyena from https://github.com/HazyResearch/safari
+1. Codebase forked from https://github.com/Howuhh/faster-trajectory-transformer
+2. Hyena module from https://github.com/HazyResearch/safari
 3. Sashimi/S4 from https://github.com/HazyResearch/state-spaces
