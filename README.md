@@ -7,7 +7,8 @@ In this class project, we experiment with the novel Hyena continuous convolution
 
 Outline of repo:
 1. train.py calls a trainer object, which is under trajectory/models/general_trainer.py. You can find the boilerplate Pytorch training loop in general_trainer.py. general_trainer then uses a generic TrajectoryModel object (a wrapper around either Hyena layers or GPT layers), which is written in trajectory.py. 
-2. The planning folder
+2. The planning folder contains utilities for beam search.
+3. 
 
 Installing dependencies:
 
@@ -26,12 +27,23 @@ python profile.py --config="configs/eval_base.yaml" --device="cuda" --seed="42" 
 
 Results:
 W&B sweep:
+Hyena converges in roughly 2 epochs. 
+
+To save time, each Hyena sweep lasted only 2 epochs. This training duration proved sufficient for the model to converge. The sweeps suggest that model size is clearly the dominant performance factor. After fixing the model to 11-12 layers, we see that embedding_dropout becomes the second most important hyperparameter. Note that during these sweeps, we kept Hyena’s convolution window the same size as the attention window in GPT-based Trajectory Model (len=250). This is so we can maintain same batch size of 256 when training on a single GPU. When training the best model, we increased the length to max length and decreased batch size to 16 to fit into memory. This resulted in a much longer time-per epoch (see side-by-side comparison of Hyena and GPT).
+
 ![Sweep curve](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/sweep.png)
 ![Sweep table](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/sweep_table.png)
 ![Importances](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/importance.png)
 
+Side-by-side comparison of Hyena and GPT-based Trajectory Models:
+
 Profiling Hyena at inference time on CPU:
 ![Hyena profile](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/hyena_profile.png)
+
+Quantization:
+
+Distributed training:
+
 
 Acknowledgements:
 1. Codebase forked from https://github.com/Howuhh/faster-trajectory-transformer
