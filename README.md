@@ -7,18 +7,25 @@ In this class project, we experiment with the novel Hyena continuous convolution
 
 Outline of repo:
 1. train.py calls a trainer object, which is under trajectory/models/general_trainer.py. You can find the boilerplate Pytorch training loop in general_trainer.py. general_trainer then uses a generic TrajectoryModel object (a wrapper around either Hyena layers or GPT layers), which is written in trajectory.py. 
-2. 
+2. The planning folder
 
 Installing dependencies:
 
 Scripts:
+Training:
 ```
 python train.py --config="configs/medium/halfcheetah_medium_hyena.yaml" --device="cuda" --mem=120G
 ```
 
+Evaluation/profiling:
+```
+python eval.py --config="configs/eval_base.yaml" --device="cuda" --seed="42" checkpoints_path="checkpoints/halfcheetah-medium-v2-hyena/uniform/baseline" beam_context=5 beam_steps=5 beam_width=32
+
+python profile.py --config="configs/eval_base.yaml" --device="cuda" --seed="42" checkpoints_path="checkpoints/halfcheetah-medium-v2-hyena/uniform/baseline" beam_context=5 beam_steps=5 beam_width=32
+```
 
 Results:
-
+![Screenshot](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/sweep.png)
 
 
 Acknowledgements:
