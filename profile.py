@@ -5,31 +5,29 @@ from eval import create_argparser
 from omegaconf import OmegaConf
 from trajectory.utils.common import set_seed
 import os
+from optimizations import quantizer
 
-"""
-Run:
-python profile.py --config="configs/eval_base.yaml" --device="cuda" --seed="42" checkpoints_path="checkpoints/halfcheetah-medium-v2-hyena/uniform/baseline" beam_context=5 beam_steps=5 beam_width=32
-
-"""
-
-
-def model_profile(config, seed, device):
+def model_profile(config, seed, device, quantize=False):
     """
         model: nn.Module
     """
+
     set_seed(seed=seed)
     run_config = OmegaConf.load(os.path.join(config.checkpoints_path, "config.yaml"))
     discretizer = torch.load(os.path.join(config.checkpoints_path, "discretizer.pt"), map_location=device)
 
-    model_parse='hyena'
-    model = TrajectoryModel(layer_type=model_parse, **run_config.model)
+    model = TrajectoryModel(**run_config.model)
     model.eval()
     model.to(device)
     model.load_state_dict(torch.load(os.path.join(config.checkpoints_path, config.model_name), map_location=device))
 
-
+    
     example_context = torch.ones((1600,1)).int().to(device)
     example_state = None
+
+    if config.quantize:
+        model = quantizer(model, (example_context), q_type=config.q_type)
+
     example_out, example_next_state = model(example_context, example_state)
 
     with profile(activities=[ProfilerActivity.CPU], profile_memory=True, record_shapes=True) as prof:
@@ -65,7 +63,7 @@ def main():
         OmegaConf.from_cli(override)
     )
 
-    model_profile(config=config, seed=args.seed, device='cpu')#args.device)
+    model_profile(config=config, seed=args.seed, quantize=True, device='cpu')#args.device)
     
     
 
