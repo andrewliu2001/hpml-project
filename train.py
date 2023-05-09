@@ -10,6 +10,19 @@ from trajectory.models.general_trainer import Trainer #general trainer
 from trajectory.datasets.d4rl_dataset import DiscretizedDataset
 from trajectory.utils.common import set_seed
 from trajectory.models.trajectory import TrajectoryModel
+import torch
+
+import torch.multiprocessing as mp
+from torch.utils.data.distributed import DistributedSampler
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.distributed import init_process_group, destroy_process_group
+
+
+def ddp_setup(rank, world_size):
+    os.environ["MASTER_ADDR"] = "localhost"
+    os.environ["MASTER_PORT"] = "12355"
+    init_process_group(backend="gloo", rank=rank, world_size=world_size)
+
 
 def create_argparser():
     parser = argparse.ArgumentParser(description="Trajectory models training hyperparameters. All can be set from command line.")
@@ -22,10 +35,6 @@ def create_argparser():
 
 
 def run_experiment(config, seed, device):
-    
-    config.model.update({'num_layers':12, 'embedding_dropout':0.02974, 'attention_dropout':0.2553, 'residual_dropout':0.185}) #best hyperparameters from sweep
-    print(f"config: {config}")
-
     config.run_seed = seed
     os.makedirs(config.trainer.checkpoints_path, exist_ok=True)
     OmegaConf.save(OmegaConf.to_container(config, resolve=True), os.path.join(config.trainer.checkpoints_path, "config.yaml"))
@@ -43,22 +52,31 @@ def run_experiment(config, seed, device):
         discount=data_conf.discount,
         strategy=data_conf.strategy
     )
-    dataloader = DataLoader(dataset, batch_size=data_conf.batch_size, shuffle=True, num_workers=8, pin_memory=True)
+    dataloader = DataLoader(dataset, batch_size=data_conf.batch_size, shuffle=False, num_workers=8, pin_memory=True, sampler=DistributedSampler(dataset))
     model_parse = config.wandb.name.split('_')[-1]
 
     model = TrajectoryModel(layer_type=model_parse, **config.model)
-    model.to(device)
+
+    model = model.to(device)
+
+    print(device)
+
+    print(model)
+    model.load_state_dict(torch.load(os.path.join(config.checkpoints_path, "model_10.pt"), map_location=f"cuda:{device}"))
+
+
+    model = DDP(model, device_ids=[device])
+
+    print("Number of parameters: ")
+    print(sum(p.numel() for p in model.parameters() if p.requires_grad))
 
     num_epochs = int(1e6 / len(dataset) * trainer_conf.num_epochs_ref)
-    print("number of epochs: ", num_epochs)
 
     warmup_tokens = len(dataset) * data_conf.seq_len * config.model.transition_dim
     final_tokens = warmup_tokens * num_epochs
 
-    wandb.init(
-        **config.wandb,
-        config=dict(OmegaConf.to_container(config, resolve=True))
-    )
+    wandb.init(**config.wandb, config=dict(OmegaConf.to_container(config, resolve=True)))
+    
     trainer = Trainer(
         final_tokens=final_tokens,
         warmup_tokens=warmup_tokens,
@@ -93,7 +111,9 @@ def run_experiment(config, seed, device):
     )
 
 
-def main():
+def main(rank: int, world_size: int):
+
+    ddp_setup(rank, world_size)
     args, override = create_argparser().parse_known_args()
     config = OmegaConf.merge(
         OmegaConf.load(args.config),
@@ -102,11 +122,16 @@ def main():
     run_experiment(
         config=config,
         seed=args.seed,
-        device=args.device
+        device=rank #args.device
     )
 
-    print(f'Device: {args.device}')
+    #print(f'Device: {args.device}')
+    print(f'Config: {config}')
+
+    destroy_process_group()
 
 
 if __name__ == "__main__":
-    main()
+    
+    world_size = torch.cuda.device_count()
+    mp.spawn(main, args=[world_size], nprocs=world_size)
