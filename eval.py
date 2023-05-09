@@ -11,6 +11,8 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from trajectory.models.trajectory import TrajectoryModel
 from trajectory.utils.common import set_seed
 from trajectory.utils.env import create_env, rollout, vec_rollout
+from optimizations import quantizer
+
 
 
 def create_argparser():
@@ -28,14 +30,16 @@ def run_experiment(config, seed, device):
     run_config = OmegaConf.load(os.path.join(config.checkpoints_path, "config.yaml"))
     discretizer = torch.load(os.path.join(config.checkpoints_path, "discretizer.pt"), map_location=device)
 
-
-
-    model_parse='gpt'
     
-    model = TrajectoryModel(layer_type=model_parse, **run_config.model)
-    model.eval()
+    model = TrajectoryModel(**run_config.model)
     model.to(device)
+    model.eval()
     model.load_state_dict(torch.load(os.path.join(config.checkpoints_path, config.model_name), map_location=device))
+
+    if config.quantize:
+        print(f"Using [{config.q_type}] quantized model.")
+        example_context = torch.ones((1600,1)).int().to(device)
+        model = quantizer(model, (example_context), q_type=config.q_type)
 
     
     if config.vectorized:
