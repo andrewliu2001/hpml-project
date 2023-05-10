@@ -3,7 +3,7 @@
 Collaborators: Andrew Liu, Kristen Surrao
 
 ## Description: ##
-In this class project, we experiment with the novel Hyena continuous convolution kernel as an alternative to transformers for efficiently capturing long-range dependencies in offline reinforcement learning. Specifically, we incorporated the Hyena module into the Trajectory Model, performed hyperparameter sweeps and profiling, and performed optimizations including distributed training and post-training static quantization. For simplicity, we only used the halfcheetah-medium-v2 environment on Gym/MuJOCO.
+In this class project, we experiment with the novel Hyena continuous convolution kernel as an alternative to transformers for efficiently capturing long-range dependencies in offline reinforcement learning. Specifically, we incorporated the Hyena module into the Trajectory Model, performed hyperparameter sweeps and profiling, and performed optimizations including distributed training and post-training quantization. For simplicity, we only used the halfcheetah-medium-v2 environment on Gym/MuJOCO.
 
 ## Outline of repo: ##
 train.py calls a trainer object, which is under trajectory/models/general_trainer.py. You can find the boilerplate Pytorch training loop in general_trainer.py. general_trainer then uses a generic TrajectoryModel object (a wrapper around either Hyena layers or GPT layers), which is written in trajectory.py. The trajectory/planning folder contains utilities for beam search, whereas trajectory/utils contains other utilities such as learning rate scheduling and trajectory discretization. Note that much of the codebase is based on https://github.com/Howuhh/faster-trajectory-transformer (see acknowledgements section)
@@ -42,7 +42,7 @@ For the comparison against GPT, we increased the Hyena window length to 1000 and
 
 
 ### Profiling Hyena at inference time on CPU: ###
-Compute-wise, cost is dominated by FFT/IFFT and linear layers, which is expected since Hyena uses linear layers to generate its continuous convolution kernel (which is then computed using FFT). Speeding up linear layers during inference time can be done using static quantization (quantizing both weight and activations post-training as opposed to just weights). Since we are interested in large kernels (of length >=1000), it does not make sense to experiment with other convolution algorithms, so we decided to stick with FFT. 
+Compute-wise, cost is dominated by FFT/IFFT and linear layers, which is expected since Hyena uses linear layers to generate its continuous convolution kernel (which is then computed using FFT). Speeding up linear layers during inference time can be done using quantization (quantizing both weight and activations post-training as opposed to just weights). Since we are interested in large kernels (of length >=1000), it does not make sense to experiment with other convolution algorithms, so we decided to stick with FFT. 
 
 ![Hyena profile](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/hyena_profile.png)
 
