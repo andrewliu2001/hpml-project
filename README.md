@@ -53,7 +53,7 @@ Note that we can only dynamically quantize linear layers. The short kernel 1-D c
 
 
 
-###Acknowledgements:
+## Acknowledgements: ##
 1. Codebase forked from https://github.com/Howuhh/faster-trajectory-transformer
 2. Hyena module from https://github.com/HazyResearch/safari
 3. Sashimi/S4 from https://github.com/HazyResearch/state-spaces
