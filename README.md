@@ -10,6 +10,12 @@ train.py calls a trainer object, which is under trajectory/models/general_traine
 
 
 ## Installing dependencies: ##
+```
+conda install -c conda-forge mesalib glfw
+conda install -c menpo osmesa glew
+conda install patchelf
+```
+Then pip install using the requirements.txt file.
 
 ## Scripts: ##
 Training:
