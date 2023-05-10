@@ -2,7 +2,7 @@
 
 Collaborators: Andrew Liu, Kristen Surrao
 
-##Description:##
+## Description: ##
 In this class project, we experiment with the novel Hyena continuous convolution kernel as an alternative to transformers for efficiently capturing long-range dependencies in offline reinforcement learning. Specifically, we incorporated the Hyena module into the Trajectory Model, performed hyperparameter sweeps and profiling, and performed optimizations including distributed training and post-training static quantization. For simplicity, we only used the halfcheetah-medium-v2 environment on Gym/MuJOCO.
 
 ##Outline of repo:##
