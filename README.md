@@ -38,7 +38,7 @@ To save time, each Hyena sweep lasted only 2 epochs. When using a window size of
 ### Side-by-side comparison of Hyena and GPT-based Trajectory Models: ###
 For the comparison against GPT, we increased the Hyena window length to 1000 and used the maximal possible batch size in each setting. We also performed distributed training on the Hyena models and observe a significant speedup. We note that a Hyena model with 800K parameters is able to perform competitively against the 1.5M-parameter Hyena models and the GPT-based architecture, suggesting the effectiveness of parameter-saving using large, continuous convolution kernels. Note that we can further improve performance dramatically by incorporating FlashConvolution - an optimization for computing faster FFTs. However, due to version constraints on Habanero GPUs were were unable to incorporate this before the deadline. 
 
-![Hyena vs GPT]([https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/importance.png](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/hyenavsgpt.png)
+![Hyena vs GPT](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/hyenavsgpt.png)
 
 
 ### Profiling Hyena at inference time on CPU: ###
