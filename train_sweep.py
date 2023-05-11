@@ -22,8 +22,10 @@ def create_argparser():
 
 def build_sweep_config():
     '''
-    hyperparameter sweep method. Initially use random to get general idea of 
-    good hyperparameters. Once we narrow them down, we can change to a Bayesian approach if necessary
+    Build hyperparameter sweep configuration
+    Find best dropouts
+    Keep number of layers between 11-12 for around 1.5 million parameter model
+
     '''
     sweep_config = {
         'method': 'random'
@@ -71,7 +73,7 @@ def run_experiment():
 
     wandb.init(project=config.wandb.name)
 
-    config.model.update(wandb.config)
+    config.model.update(wandb.config) #override default parameters with those from wandb sweep
 
     config.run_seed = seed
     os.makedirs(config.trainer.checkpoints_path, exist_ok=True)
@@ -100,7 +102,6 @@ def run_experiment():
     wandb.log({'trainable_params': num_trainable_params})
 
     num_epochs = int(1e6 / len(dataset) * trainer_conf.num_epochs_ref)
-    print("number of epochs is ", num_epochs)
 
     warmup_tokens = len(dataset) * data_conf.seq_len * config.model.transition_dim
     final_tokens = warmup_tokens * num_epochs
@@ -147,9 +148,9 @@ if __name__ == "__main__": #run full sweep
         OmegaConf.from_cli(override)
     )
     
+    #begin wandb sweep
     sweep_config = build_sweep_config()
     sweep_id = wandb.sweep(sweep=sweep_config, project=config.wandb.name)
-    #sweep_id = 'kmsurrao/halfcheetah_medium_hyena/v51lsrud' #remove and uncomment above
     wandb.agent(sweep_id, function=run_experiment, count=10)
 
     print(f'Device: {args.device}')

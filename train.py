@@ -54,14 +54,10 @@ def run_experiment(config, seed, device):
     )
     dataloader = DataLoader(dataset, batch_size=data_conf.batch_size, shuffle=False, num_workers=8, pin_memory=True, sampler=DistributedSampler(dataset))
     model_parse = config.wandb.name.split('_')[-1]
-
     model = TrajectoryModel(layer_type=model_parse, **config.model)
-
     model = model.to(device)
+    print("Device: ", device)
 
-    print(device)
-
-    print(model)
     model.load_state_dict(torch.load(os.path.join(config.checkpoints_path, "model_10.pt"), map_location=f"cuda:{device}"))
 
 
@@ -125,7 +121,6 @@ def main(rank: int, world_size: int):
         device=rank #args.device
     )
 
-    #print(f'Device: {args.device}')
     print(f'Config: {config}')
 
     destroy_process_group()

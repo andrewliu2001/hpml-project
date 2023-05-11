@@ -9,7 +9,7 @@ from optimizations import quantizer
 
 def model_profile(config, seed, device, quantize=False):
     """
-        model: nn.Module
+    model: nn.Module
     """
 
     set_seed(seed=seed)
@@ -63,7 +63,7 @@ def main():
         OmegaConf.from_cli(override)
     )
 
-    model_profile(config=config, seed=args.seed, quantize=True, device='cpu')#args.device)
+    model_profile(config=config, seed=args.seed, quantize=True, device='cpu') #can set device to args.device
     
     
 
