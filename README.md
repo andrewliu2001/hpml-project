@@ -15,7 +15,7 @@ conda install -c conda-forge mesalib glfw
 conda install -c menpo osmesa glew
 conda install patchelf
 ```
-Then pip install using the requirements.txt file.
+Then pip install using the requirements.txt file. Ensure that mujoco is located in .mujoco/mujoco210.
 
 ## Scripts: ##
 Training:
@@ -35,7 +35,7 @@ python profile.py --config="configs/eval_base.yaml" --device="cuda" --seed="42" 
 
 Note that during these sweeps, we kept Hyena’s convolution window the same size as the attention window in GPT-based Trajectory Model (len=250). This is so we can maintain same batch size of 256 when training on a single GPU. When training the best model, we increased the length to max length and decreased batch size to 64 to fit into memory, resulting in a much longer time-per epoch (see side-by-side comparison of Hyena and GPT).
 
-To save time, each Hyena sweep lasted only 2 epochs. When using a window size of 250, this training duration proved sufficient for the model to converge. The sweeps suggest that, with a small fixed convolution window, model size is clearly the dominant performance factor. After fixing the model to 11-12 layers, we see that embedding_dropout becomes the second most important hyperparameter. 
+To save time, the run for each point in the hyperparameter search space of the Hyena sweep lasted only 2 epochs. When using a window size of 250, this training duration proved sufficient for the model to converge. The sweeps suggest that, with a small fixed convolution window, model size is clearly the dominant performance factor. After fixing the model to 11-12 layers, we see that embedding_dropout becomes the second most important hyperparameter. 
 
 ![Sweep curve](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/sweep.png)
 ![Sweep table](https://github.com/andrewliu2001/hpml-project/blob/tuning/assets/sweep_table.png)
