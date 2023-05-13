@@ -1,8 +1,3 @@
-"""
-Simplified standalone version of Hyena: https://arxiv.org/abs/2302.10866, designed for quick experimentation.
-A complete version is available under `src.models.sequence.hyena`.
-"""
-
 import math
 import torch
 import torch.nn as nn
@@ -228,23 +223,39 @@ class HyenaOperator(nn.Module):
             channels=1, 
             dropout=filter_dropout, 
             **filter_args
-        ) 
+        )
 
-    def forward(self, u, state, attn_pad_mask, *args, **kwargs):
+    def forward(self, u, state=None, *args, **kwargs):
 
         """
-        Figure out what to do with state, attn_pad_mask
+        Figure out what to do with state
 
         """
         u = self.norm1(u)
 
-        l = u.size(-2)
+        #print("INPUT")
+        #print(u.size())
+
+        if state is None: #at train time
+            # if context_len < seq_len
+            new_state = u
+
+        else: #at inference time
+
+            assert u.size(1) == 1, f'when using memory input should be 1-time-step tensor, got {u.size(1)} timesteps.'
+            assert state.shape[1] + 1 <= self.l_max, f"{state.shape[1] + 1}"
+
+            new_state = torch.cat([state, u], dim=1)
+
+        l = new_state.size(-2)
         l_filter = min(l, self.l_max)
-        u = self.in_proj(u)
-        u = rearrange(u, 'b l d -> b d l')
+
+        seq = self.in_proj(new_state)
+        seq = rearrange(seq, 'b l d -> b d l')
+
         
-        uc = self.short_filter(u)[...,:l_filter] 
-        *x, v = uc.split(self.d_model, dim=1)
+        seq_c = self.short_filter(seq)[...,:l_filter] 
+        *x, v = seq_c.split(self.d_model, dim=1)
         
         k = self.filter_fn.filter(l_filter)[0]
         k = rearrange(k, 'l (o d) -> o d l', o=self.order - 1)
@@ -254,8 +265,21 @@ class HyenaOperator(nn.Module):
             v = self.dropout(v * x_i)
             v = self.filter_fn(v, l_filter, k=k[o], bias=bias[o])
 
-        y = rearrange(v * x[0], 'b d l -> b l d')
+        y = v*x[0]
+
+        y = rearrange(y, 'b d l -> b l d')
+
 
         y = self.out_proj(self.norm2(y))
         
-        return y, None
+        #print(y.size())
+        #print(new_state.size())
+
+
+        if u.size(1) == 1:
+            #inference time
+            #print(y[:,-1,:].unsqueeze(1).size())
+            return y[:,-1,:].unsqueeze(1), new_state
+        else: 
+            #train time
+            return y, new_state
