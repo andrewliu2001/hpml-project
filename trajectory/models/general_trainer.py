@@ -4,13 +4,16 @@ import wandb
 import numpy as np
 import torch.nn.functional as F
 
-from tqdm.auto import tqdm, trange
 from stable_baselines3.common.vec_env import DummyVecEnv
 
 from trajectory.utils.env import vec_rollout, create_env
 from trajectory.models.ein_linear import EinLinear
 from trajectory.utils.scheduler import GPTScheduler
 from trajectory.utils.common import weight_decay_groups, set_seed
+
+from time import time
+
+import torch.nn as nn
 
 
 class Trainer:
@@ -74,6 +77,8 @@ class Trainer:
 
         self.device = device
 
+        
+
     def get_optimizer(self, model):
         """
         Edit for non-GPT architectures
@@ -81,8 +86,8 @@ class Trainer:
         param_groups = weight_decay_groups(
                 model=model,
                 whitelist_modules=(torch.nn.Linear,  torch.nn.MultiheadAttention, EinLinear),
-                blacklist_modules=(torch.nn.LayerNorm, torch.nn.Embedding),
-                blacklist_named=("pos_emb",)
+                blacklist_modules=(torch.nn.LayerNorm, torch.nn.Embedding)
+                #blacklist_named=("pos_emb",)
             )
 
 
@@ -117,6 +122,7 @@ class Trainer:
         print(f'Logits dimensions: {logits.size()}')
         print(f'State dimensions: {len(state)}, {state[0].size()}')
         """
+        
 
         loss = F.cross_entropy(logits.reshape(-1, logits.size(-1)), targets.reshape(-1), reduction="none")
         if self.action_weight != 1 or self.value_weight != 1 or self.reward_weight != 1:
@@ -131,6 +137,7 @@ class Trainer:
             loss = loss * weights.view(-1)
 
         loss = (loss * loss_pad_mask.view(-1)).mean()
+
 
         return loss
 
@@ -162,6 +169,7 @@ class Trainer:
         return np.mean(rewards), np.std(rewards), np.mean(scores), np.std(scores)
 
     def train(self, model, dataloader, num_epochs=1, log_every=100):
+        
         model.train()
 
         optimizer = self.get_optimizer(model)
@@ -171,11 +179,23 @@ class Trainer:
         if self.checkpoints_path is not None:
             torch.save(dataloader.dataset.get_discretizer(), os.path.join(self.checkpoints_path, "discretizer.pt"))
 
-        for epoch in trange(1, num_epochs + 1, desc="Training"):
+        for epoch in range(11, num_epochs + 1):
+            epoch_train_time = 0
+            epoch_dataloading_time = 0
             epoch_losses = []
-            for i, batch in enumerate(tqdm(dataloader, desc="Epoch", leave=False)):
+            if str(self.device) != 'cpu':
+                torch.cuda.synchronize()
+            total_start = time()
+            dataloading_start = total_start
+            for i, batch in enumerate(dataloader):
                 batch = [b.to(self.device) for b in batch]
-                loss = self.__get_loss(model, batch)
+                if str(self.device) != 'cpu':
+                    torch.cuda.synchronize()
+                dataloading_end = time()
+
+                train_start = dataloading_end
+
+                loss = self.__get_loss(model.module, batch)
 
                 # step first, to prevent starting from high lr
                 scheduler.step(batch_size=batch[0].reshape(-1).shape[0])
@@ -185,6 +205,13 @@ class Trainer:
                     torch.nn.utils.clip_grad_norm_(model.parameters(), self.clip_grad)
                 optimizer.step()
 
+                if str(self.device) != 'cpu':
+                    torch.cuda.synchronize()
+                train_end = time()
+
+                epoch_dataloading_time += (dataloading_end-dataloading_start)
+                epoch_train_time += (train_end-train_start)
+
                 # log here!!
                 epoch_losses.append(loss.item())
                 if i % log_every == 0:
@@ -193,12 +220,21 @@ class Trainer:
                         "train/lr": scheduler.get_current_lr()
                     })
 
+                if str(self.device) != 'cpu':
+                    torch.cuda.synchronize()
+                dataloading_start = time()
+
+            if str(self.device) != 'cpu':  
+                torch.cuda.synchronize()
+            total_end = time()
+            total_time = total_end-total_start
+
             if epoch % self.eval_every == 0:
                 env_name = dataloader.dataset.get_env_name()
                 discretizer = dataloader.dataset.get_discretizer()
                 discretizer.to(self.device)
 
-                reward_mean, reward_std, score_mean, score_std = self.eval(env_name, model, discretizer, seed=self.eval_seed)
+                reward_mean, reward_std, score_mean, score_std = self.eval(env_name, model.module, discretizer, seed=self.eval_seed)
 
                 wandb.log({
                     "eval/reward_mean": reward_mean,
@@ -208,9 +244,9 @@ class Trainer:
                 })
                 print(f"   EVAL {epoch}:", reward_mean, reward_std)
 
-            if self.checkpoints_path is not None and epoch % self.save_every == 0:
+            if self.device==0 and self.checkpoints_path is not None and epoch % self.save_every == 0:
                 path = os.path.join(self.checkpoints_path, f"model_{epoch}.pt")
-                torch.save(model.state_dict(), path)
+                torch.save(model.module.state_dict(), path)
 
             loss_mean = np.mean(epoch_losses)
             wandb.log({
@@ -218,9 +254,9 @@ class Trainer:
                 "train/epoch": epoch
             })
 
-            print(f'   EPOCH {epoch}:', loss_mean)
+            print(f'   EPOCH {epoch}: {loss_mean}, Total time: {total_time}, Compute time: {epoch_train_time}, Dataloading time: {epoch_dataloading_time}')
 
         if self.checkpoints_path is not None:
-            torch.save(model.state_dict(), os.path.join(self.checkpoints_path, "model_last.pt"))
+            torch.save(model.module.state_dict(), os.path.join(self.checkpoints_path, "model_last.pt"))
 
         return model
