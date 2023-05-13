@@ -45,13 +45,11 @@ class TrajectoryModel(nn.Module):
                 [GPTBlock(transition_dim, seq_len, embedding_dim, num_heads, attention_dropout, residual_dropout) for _ in range(num_layers)]
             )
         elif self.layer_type == 'hyena':
-            self.blocks = nn.ModuleList(
-                [HyenaOperator(d_model=self.d_model, l_max=seq_len) for _ in range(num_layers)]
-            )
+            self.blocks = nn.ModuleList([HyenaOperator(d_model=self.d_model, l_max=seq_len) for _ in range(num_layers)])
+            
         else:
             raise Exception("Not a valid core layer.")
         self.norm = nn.LayerNorm(embedding_dim)
-
         # token's classifier
         if use_sep_heads:
             # see https://github.com/jannerm/trajectory-transformer/issues/3
@@ -76,6 +74,7 @@ class TrajectoryModel(nn.Module):
 
     def get_seq_len(self):
         return self.seq_len
+
 
     def _init_weights(self, module):
         if isinstance(module, (nn.Linear, nn.Embedding)):
