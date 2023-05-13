@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from einops import rearrange
 
 
+
 def fftconv(u, k, D):
     seqlen = u.shape[-1]
     fft_size = 2 * seqlen
